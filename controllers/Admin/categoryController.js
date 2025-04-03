@@ -1,4 +1,4 @@
-const CategoryModel = require('../models/categoryModel');
+const CategoryModel = require('../../models/Admin/categoryModel');
 
 class CategoryController {
 
