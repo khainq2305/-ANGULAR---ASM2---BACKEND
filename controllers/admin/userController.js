@@ -1,7 +1,7 @@
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
-const User = require('../../models/admin/userModel'); 
+const User = require('../../models/Admin/userModel'); 
 const upload = require('../../middlewares/upload');
 module.exports = {
 async list(req, res) {

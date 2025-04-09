@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 const Comment = require('../../models/admin/commentModel');
 const Product = require('../../models/admin/productModel'); 
-const User = require('../../models/admin/userModel'); 
+const User = require('../../models/Admin/userModel'); 
 require('dotenv').config(); 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'; 
 
