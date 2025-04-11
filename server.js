@@ -6,8 +6,8 @@ const app = express();
 const port = 3000;
 
 // Đổi thành thư mục admin chuẩn
-const adminRoutes = require('./routes/admin');
-
+const adminRoutes = require('./routes/Admin');
+const clientRoutes = require('./routes/Client')
 // Đọc JSON
 app.use(express.json());
 
@@ -27,7 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Route chính
 app.use('/admin', adminRoutes);
-
+app.use('/', clientRoutes)
 // Lắng nghe server
 app.listen(port, () => {
   console.log(`✅ Server is running at http://localhost:${port}`);

@@ -25,10 +25,15 @@ const Product = sequelize.define(
     discount: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-    },
+      defaultValue: 0,
+    }
+,    
     is_feature: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },finalPrice: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
     },
     image: {
       type: DataTypes.STRING,
@@ -36,15 +41,15 @@ const Product = sequelize.define(
     },
     idCategory: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
         model: Category,
         key: "id",
       },
-      allowNull: false,
     },
     status: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 1,
+      defaultValue: true,
     },
     quantity: {
       type: DataTypes.INTEGER,
@@ -59,11 +64,10 @@ const Product = sequelize.define(
   {
     tableName: "products",
     timestamps: true,
-    paranoid: true, 
-    deletedAt: "deletedAt", 
+    paranoid: true,
+    deletedAt: "deletedAt",
   }
 );
-
 
 Product.belongsTo(Category, { foreignKey: "idCategory", as: "category" });
 

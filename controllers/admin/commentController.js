@@ -1,5 +1,9 @@
 const { Sequelize } = require('sequelize');
+<<<<<<< HEAD
 const Comment = require('../../models/admin/commentModel');
+=======
+const Comment = require('../../models/Admin/commentModel');
+>>>>>>> 841118a ([CLIENT - ANGULAR]- Đăng ký, đăng nhập)
 const Product = require('../../models/Admin/productModel'); 
 const User = require('../../models/Admin/userModel'); 
 require('dotenv').config(); 

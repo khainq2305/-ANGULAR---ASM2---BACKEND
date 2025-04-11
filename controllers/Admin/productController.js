@@ -74,10 +74,8 @@ static async get(req, res) {
         'name',
         'description',
         'price',
-        'discount_type',
-        'discount_value',
-        'final_price', // ✅ QUAN TRỌNG!
-        'image',
+        'discount',
+        'finalPrice',  // Trả về trường finalPrice
         'status',
         'quantity',
         'idCategory',
@@ -120,70 +118,58 @@ static async get(req, res) {
   // ✅ Tạo sản phẩm mới
   static async create(req, res) {
     try {
-      console.log("🟡 BODY:", req.body);
-      console.log("🟢 FILES:", req.files);
-      console.log("📦 HEADERS:", req.headers);
-      console.log("🟡 BODY:", req.body);
-      console.log("🟢 FILES:", req.files);
-
       const data = req.body;
-
+  
       if (req.files?.image?.[0]) {
-        data.image = req.files.image[0].filename; // ✅ đúng tên file đã upload
+        data.image = req.files.image[0].filename;
       }
-      
-      
-
-      // ✅ Parse số (FormData luôn là string!)
+  
+      // Chuyển đổi giá trị giá gốc và giảm giá
       data.price = parseFloat(data.price);
-      data.discountValue = parseFloat(data.discountValue);
-      data.finalPrice = parseFloat(data.finalPrice);
+      data.discount = parseFloat(data.discount);
+  
+      // Tính giá sau giảm
+      let finalPrice = data.price - data.discount;
+  
+      // Kiểm tra nếu giá giảm không hợp lệ (giảm quá mức hoặc giá không hợp lệ)
+      if (finalPrice < 0) {
+        return res.status(400).json({ message: "Giá sau giảm không thể nhỏ hơn 0." });
+      }
+  
+      data.finalPrice = finalPrice;
       data.quantity = parseInt(data.quantity);
       data.status = parseInt(data.status);
       data.is_feature = parseInt(data.is_feature);
-// Tính finalPrice
-if (data.discountType === "percentage") {
-  data.finalPrice = data.price * (1 - data.discountValue / 100);
-} else if (data.discountType === "fixed") {
-  data.finalPrice = data.discountValue;
-} else {
-  data.finalPrice = data.price;
-}
-
-      // ✅ Danh mục: kiểm tra mảng hoặc chuỗi
+  
+      // Danh mục: kiểm tra mảng hoặc chuỗi
       if (!Array.isArray(data.categories)) {
         data.categories = [data.categories];
       }
-
-      // ✅ Gán idCategory (chọn phần tử đầu tiên)
+  
+      // Gán idCategory (chọn phần tử đầu tiên)
       data.idCategory = parseInt(data.categories[0]);
-
+  
       const product = await Product.create({
         name: data.name,
         description: data.description,
         price: data.price,
-        discount_type: data.discountType,
-        discount_value: data.discountValue,
-        final_price: data.finalPrice, // ✅ Sửa lại: final_price snake_case
+        discount: data.discount,
+        finalPrice: data.finalPrice, // Lưu giá sau giảm
         is_feature: data.is_feature,
         image: data.image,
         idCategory: data.idCategory,
         status: data.status,
         quantity: data.quantity,
       });
-      
-      res
-        .status(201)
-        .json({ message: "Tạo sản phẩm thành công", data: product });
+  
+      res.status(201).json({ message: "Tạo sản phẩm thành công", data: product });
     } catch (err) {
       console.error("🔥 Lỗi tạo sản phẩm:", err);
-      res
-        .status(500)
-        .json({ message: "Tạo sản phẩm thất bại", error: err.message });
+      res.status(500).json({ message: "Tạo sản phẩm thất bại", error: err.message });
     }
   }
+  
 
-  // ✅ Cập nhật sản phẩm
   static async update(req, res) {
     try {
       const { id } = req.params;
@@ -194,21 +180,30 @@ if (data.discountType === "percentage") {
       }
   
       const data = req.body;
-      console.log('📦 BODY:', req.body);
-
-      // ✅ Parse các trường số an toàn
+  
+      // Chuyển đổi giá trị giá gốc và giảm giá
       data.price = parseFloat(data.price) || 0;
-      data.discount_value = parseFloat(data.discount_value) || 0;
+      data.discount = parseFloat(data.discount) || 0;
+  
+      // Tính giá sau giảm
+      let finalPrice = data.price - data.discount;
+  
+      // Kiểm tra nếu giá giảm không hợp lệ
+      if (finalPrice < 0) {
+        return res.status(400).json({ success: false, message: 'Giá sau giảm không thể nhỏ hơn 0.' });
+      }
+  
+      data.finalPrice = finalPrice;
       data.quantity = parseInt(data.quantity) || 0;
       data.status = parseInt(data.status) || 0;
       data.is_feature = parseInt(data.is_feature) || 0;
   
-      // ✅ Ảnh mới
+      // Xử lý hình ảnh mới
       if (req.files?.thumbnail?.[0]) {
         data.image = req.files.thumbnail[0].filename;
       }
   
-      // ✅ Gán danh mục
+      // Xử lý danh mục
       if (!Array.isArray(data.categories)) {
         data.categories = [data.categories];
       }
@@ -218,18 +213,7 @@ if (data.discountType === "percentage") {
         return res.status(400).json({ success: false, message: 'Danh mục không hợp lệ' });
       }
   
-      // ✅ final_price
-      if (data.discount_type === "percentage") {
-        data.final_price = data.price * (1 - data.discount_value / 100);
-      } else if (data.discount_type === "fixed") {
-        data.final_price = data.discount_value;
-      } else {
-        data.final_price = data.price;
-      }
-  
-      // ✅ Debug xem có bị NaN
-      console.log("🔧 Dữ liệu cập nhật:", data);
-  
+      // Cập nhật sản phẩm
       await product.update(data);
   
       res.json({ success: true, message: 'Cập nhật sản phẩm thành công', data: product });
@@ -238,6 +222,7 @@ if (data.discountType === "percentage") {
       res.status(500).json({ success: false, message: 'Lỗi server', error: err.message });
     }
   }
+  
   
 
   // ✅ Xóa mềm

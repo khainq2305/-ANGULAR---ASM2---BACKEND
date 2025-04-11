@@ -1,6 +1,6 @@
 const Order = require("./admin/orderModel");
 const OrderDetail = require("./admin/orderDetailModel");
-const Product = require("./admin/productModel");
+const Product = require("./Admin/productModel");
 const User = require("./Admin/userModel");
 const CheckoutAddress = require("./admin/checkoutAddressModel");
 

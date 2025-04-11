@@ -18,7 +18,14 @@ router.post(
 );
   
 
-router.put('/products/:id', ProductController.update);
+router.put(
+  '/products/:id',
+  upload.fields([
+    { name: 'thumbnail', maxCount: 1 }, // tên này phải đúng với tên append ở frontend
+    { name: 'media', maxCount: 10 }     // nếu có phần media (ảnh chi tiết)
+  ]),
+  ProductController.update
+);
 
 router.delete("/products/delete-multiple", ProductController.deleteMultiple);
 
