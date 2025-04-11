@@ -1,6 +1,6 @@
 const { Sequelize } = require('sequelize');
 const Comment = require('../../models/admin/commentModel');
-const Product = require('../../models/admin/productModel'); 
+const Product = require('../../models/Admin/productModel'); 
 const User = require('../../models/Admin/userModel'); 
 require('dotenv').config(); 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'; 
@@ -76,7 +76,8 @@ module.exports = {
         productName: item.Product?.name || 'Không rõ',
         imageUrl: item.Product?.image ? `${BASE_URL}/uploads/${item.Product.image}` : '',
         totalComments: parseInt(item.getDataValue('totalComments')),
-        avgRating: parseFloat(item.getDataValue('avgRating')).toFixed(1)
+        avgRating: parseFloat(item.getDataValue('avgRating'))
+
       }));
   
       res.json({ success: true, data: result });

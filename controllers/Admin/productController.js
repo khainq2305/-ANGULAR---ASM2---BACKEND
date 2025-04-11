@@ -1,4 +1,4 @@
-const Product = require("../../models/admin/productModel");
+const Product = require("../../models/Admin/productModel");
 const Category = require("../../models/Admin/categoryModel");
 const { Op } = require("sequelize");
 
@@ -62,9 +62,31 @@ static async get(req, res) {
       limit,
       offset,
       order,
-      include: [{ model: Category, as: "category" }],
-      paranoid: !includeDeleted, // quan trọng để lấy cả soft-deleted
+      include: [
+        {
+          model: Category,
+          as: "category",
+          attributes: ["id", "name"], // giới hạn tránh dư thừa
+        },
+      ],
+      attributes: [
+        'id',
+        'name',
+        'description',
+        'price',
+        'discount_type',
+        'discount_value',
+        'final_price', // ✅ QUAN TRỌNG!
+        'image',
+        'status',
+        'quantity',
+        'idCategory',
+        'createdAt',
+        'deletedAt'
+      ],
+      paranoid: !includeDeleted,
     });
+    
 
     res.status(200).json({
       message: "Lấy danh sách sản phẩm thành công",
@@ -88,7 +110,8 @@ static async get(req, res) {
       if (!product) {
         return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
       }
-      res.status(200).json(product);
+      res.status(200).json({ message: 'Lấy thành công', data: product }); // ✅ chuẩn
+
     } catch (err) {
       res.status(500).json({ message: "Lỗi server", error: err.message });
     }
@@ -118,6 +141,14 @@ static async get(req, res) {
       data.quantity = parseInt(data.quantity);
       data.status = parseInt(data.status);
       data.is_feature = parseInt(data.is_feature);
+// Tính finalPrice
+if (data.discountType === "percentage") {
+  data.finalPrice = data.price * (1 - data.discountValue / 100);
+} else if (data.discountType === "fixed") {
+  data.finalPrice = data.discountValue;
+} else {
+  data.finalPrice = data.price;
+}
 
       // ✅ Danh mục: kiểm tra mảng hoặc chuỗi
       if (!Array.isArray(data.categories)) {
@@ -127,7 +158,20 @@ static async get(req, res) {
       // ✅ Gán idCategory (chọn phần tử đầu tiên)
       data.idCategory = parseInt(data.categories[0]);
 
-      const product = await Product.create(data);
+      const product = await Product.create({
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        discount_type: data.discountType,
+        discount_value: data.discountValue,
+        final_price: data.finalPrice, // ✅ Sửa lại: final_price snake_case
+        is_feature: data.is_feature,
+        image: data.image,
+        idCategory: data.idCategory,
+        status: data.status,
+        quantity: data.quantity,
+      });
+      
       res
         .status(201)
         .json({ message: "Tạo sản phẩm thành công", data: product });
@@ -144,23 +188,57 @@ static async get(req, res) {
     try {
       const { id } = req.params;
       const product = await Product.findByPk(id);
+  
       if (!product) {
-        return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+        return res.status(404).json({ success: false, message: 'Sản phẩm không tồn tại' });
       }
-
+  
       const data = req.body;
-      if (req.file) {
-        data.image = req.file.filename;
-      }
+      console.log('📦 BODY:', req.body);
 
+      // ✅ Parse các trường số an toàn
+      data.price = parseFloat(data.price) || 0;
+      data.discount_value = parseFloat(data.discount_value) || 0;
+      data.quantity = parseInt(data.quantity) || 0;
+      data.status = parseInt(data.status) || 0;
+      data.is_feature = parseInt(data.is_feature) || 0;
+  
+      // ✅ Ảnh mới
+      if (req.files?.thumbnail?.[0]) {
+        data.image = req.files.thumbnail[0].filename;
+      }
+  
+      // ✅ Gán danh mục
+      if (!Array.isArray(data.categories)) {
+        data.categories = [data.categories];
+      }
+      data.idCategory = parseInt(data.categories[0]) || null;
+  
+      if (!data.idCategory) {
+        return res.status(400).json({ success: false, message: 'Danh mục không hợp lệ' });
+      }
+  
+      // ✅ final_price
+      if (data.discount_type === "percentage") {
+        data.final_price = data.price * (1 - data.discount_value / 100);
+      } else if (data.discount_type === "fixed") {
+        data.final_price = data.discount_value;
+      } else {
+        data.final_price = data.price;
+      }
+  
+      // ✅ Debug xem có bị NaN
+      console.log("🔧 Dữ liệu cập nhật:", data);
+  
       await product.update(data);
-      res.status(200).json({ message: "Cập nhật thành công", data: product });
+  
+      res.json({ success: true, message: 'Cập nhật sản phẩm thành công', data: product });
     } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Cập nhật thất bại", error: err.message });
+      console.error('🔥 Lỗi khi cập nhật sản phẩm:', err);
+      res.status(500).json({ success: false, message: 'Lỗi server', error: err.message });
     }
   }
+  
 
   // ✅ Xóa mềm
   static async delete(req, res) {

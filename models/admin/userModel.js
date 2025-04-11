@@ -27,12 +27,20 @@ const User = sequelize.define(
       allowNull: true,
     },
     role: {
-      type: DataTypes.STRING,
+      type: DataTypes.TINYINT,
       allowNull: false,
     },
     status: {
       type: DataTypes.INTEGER,
-      defaultValue: 1, // 1 = Đang hoạt động, 0 = Đã khóa
+      defaultValue: 0, 
+    },
+    gender: { // ✅ THÊM VÀO
+      type: DataTypes.ENUM('male', 'female', 'other'),
+      allowNull: true
+    },
+    dob: { // ✅ THÊM VÀO
+      type: DataTypes.DATEONLY,
+      allowNull: true
     },
     deletedAt: { type: DataTypes.DATE, allowNull: true }, // Ngày yêu cầu xóa
   },
@@ -41,6 +49,6 @@ const User = sequelize.define(
     timestamps: true,
     paranoid: true, // ✅ Bật xóa mềm
   }
-);
+); 
 
 module.exports = User;

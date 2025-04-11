@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const ProductController = require('../../controllers/Admin/productController');
-const upload = require('../../middlewares/uploads'); // ✅ dùng đúng file uploads.js
+const ProductController = require('../../controllers/admin/productController');
+const upload = require('../../middlewares/uploads'); 
 
 router.get('/products/list', ProductController.get);
 
@@ -12,7 +12,7 @@ router.get('/products/:id', ProductController.getById);
 router.post(
   '/products/add',
   upload.fields([
-    { name: 'image', maxCount: 1 }, // ✅ đúng với field Angular gửi
+    { name: 'image', maxCount: 1 }, 
   ]),
   ProductController.create
 );
