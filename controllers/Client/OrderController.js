@@ -1,8 +1,10 @@
-const Cart = require('../../models/Client/CartModel');
+
 const Order = require('../../models/Client/OrderModel');
 const OrderDetail = require('../../models/Client/OrderDetailModel');
 const Product = require('../../models/Admin/productModel');
+const Cart = require('../../models/Client/CartModel');
 
+const CheckoutAddress = require('../../models/Client/checkoutAddressModel');
 class OrderController {
   // ✅ POST /orders/create
   static async createOrder(req, res) {
@@ -97,6 +99,51 @@ class OrderController {
     } catch (error) {
       console.error("❌ Lỗi khi lấy danh sách đơn hàng:", error);
       res.status(500).json({ success: false, message: "Lỗi server" });
+    }
+  }
+  static async placeOrder(req, res) {
+    const { cartItems, totalPrice, paymentMethod, shippingMethod, shippingFee, address } = req.body;
+    const userId = req.user.id;
+    
+  
+    try {
+      const addressData = await CheckoutAddress.create({
+        idUser: userId,
+        province_name: address.provinceId,
+        district_name: address.districtId,
+        ward_name: address.wardCode,
+        address_detail: address.address_detail, // ✅ thêm dòng này
+        phone: address.phone                    // ✅ thêm dòng này
+      });
+      
+  
+      const order = await Order.create({
+        idUser: userId,
+        checkout_address_id: addressData.id,
+        name: address.name,          // ✅ thêm dòng này
+        phone: address.phone,        // ✅ thêm dòng này
+        total_price: totalPrice,
+        payment_method: paymentMethod,
+        payment_status: 'pending',
+        shipping_method: shippingMethod,
+        status: 0
+      });
+      
+  
+      for (let item of cartItems) {
+        await OrderDetail.create({
+          idOrder: order.id,
+          idProduct: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        });
+      }
+      await Cart.destroy({ where: { idUser: userId } });
+
+      return res.status(201).json({ message: 'Đặt hàng thành công', orderId: order.idOrder });
+    } catch (error) {
+      console.error('❌ Lỗi tạo đơn hàng:', error);
+      return res.status(500).json({ error: 'Lỗi server khi tạo đơn hàng' });
     }
   }
   

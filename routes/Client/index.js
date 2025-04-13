@@ -7,6 +7,7 @@ const cartRoutes = require('./cartRoutes'); // ✅ THÊM
 const orderRoutes = require('./orderRoutes'); // ✅ THÊM DÒNG NÀY
 const productRoutes = require('./productRoutes');
 const categoryRoutes = require('./categoryRoutes');
+const ghnRoutes = require('./ghn');
 // Route đăng nhập, đăng ký
 router.use('/', authRoutes);
 
@@ -14,6 +15,8 @@ router.use('/', authRoutes);
 // Route sản phẩm
 router.use('/', productRoutes); // ✅ THÊM NÀY
 
+
+router.use('/ghn', ghnRoutes); // ✅ GẮN VÀO
 
 // ✅ Gắn route giỏ hàng
 router.use('/cart', cartRoutes);

@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../database");
 
-const Order = sequelize.define(
-  "Order",
+const CheckoutAddress = sequelize.define(
+  "CheckoutAddress",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -12,44 +12,38 @@ const Order = sequelize.define(
     idUser: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
     },
-   
-    checkout_address_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    payment_method: {
+    province_name: {
+      // ✅ Đổi từ province_id sang province_name
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "COD",
+    },
+    district_name: {
+      // ✅ Đổi từ district_id sang district_name
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    ward_name: {
+      // ✅ Đổi từ ward_id sang ward_name
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    address_detail: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     phone: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    status: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-    },
-    total_price: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-    },
-    cancel_reason: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
   },
   {
-    tableName: "orders",
-    timestamps: true,
-
+    tableName: "checkout_address",
   }
 );
 
-module.exports = Order;
+module.exports = CheckoutAddress;
