@@ -23,10 +23,6 @@ const Category = connection.define('Category', {
         type: DataTypes.INTEGER,
         defaultValue: 1
     },
-    deletedAt: {
-        type: DataTypes.DATE,
-        allowNull: true
-    }
 }, {
     tableName: 'categories',
     timestamps: true,

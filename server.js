@@ -1,13 +1,21 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
 const app = express();
 const port = 3000;
 
+// Kiểm tra và tạo thư mục uploads nếu chưa có
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Đổi thành thư mục admin chuẩn
 const adminRoutes = require('./routes/Admin');
-const clientRoutes = require('./routes/Client')
+const clientRoutes = require('./routes/Client');
+
 // Đọc JSON
 app.use(express.json());
 
@@ -27,7 +35,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Route chính
 app.use('/admin', adminRoutes);
-app.use('/', clientRoutes)
+app.use('/', clientRoutes);
+
 // Lắng nghe server
 app.listen(port, () => {
   console.log(`✅ Server is running at http://localhost:${port}`);
