@@ -17,19 +17,35 @@ class CartController {
         return res.status(400).json({ message: 'Người dùng không tồn tại!' });
       }
   
-      // ✅ Kiểm tra sản phẩm đã tồn tại trong giỏ hàng chưa
+      const product = await Product.findByPk(product_id);
+      if (!product) {
+        return res.status(404).json({ message: "Sản phẩm không tồn tại" });
+      }
+  
       let existingCart = await Cart.findOne({
         where: { idUser, product_id }
       });
   
       if (existingCart) {
-        // ✅ Nếu đã có → cập nhật số lượng
+        // ✅ Kiểm tra nếu tổng vượt quá tồn kho
+        if (existingCart.quantity + quantity > product.quantity) {
+          return res.status(400).json({
+            message: `Chỉ còn ${product.quantity - existingCart.quantity} sản phẩm có sẵn`
+          });
+        }
+  
         existingCart.quantity += quantity;
         await existingCart.save();
   
         return res.status(200).json({ message: "Đã cập nhật số lượng", data: existingCart });
       } else {
-        // ✅ Nếu chưa có → tạo mới
+        // ✅ Nếu thêm mới, cũng phải kiểm tra
+        if (quantity > product.quantity) {
+          return res.status(400).json({
+            message: `Chỉ còn ${product.quantity} sản phẩm có sẵn`
+          });
+        }
+  
         const newCart = await Cart.create({
           idUser,
           product_id,
@@ -44,28 +60,71 @@ class CartController {
     }
   }
   
+  
      
-      static async getCartByUser(req, res) {
-        const { id } = req.params;
-        try {
-          const items = await Cart.findAll({
-            where: { idUser: id },
-            include: [
-              {
-                model: Product,
-                as: 'product', // 👈 nếu bạn định nghĩa alias khi `Cart.belongsTo(Product, { ... })`
-                attributes: ['id', 'name', 'image', 'price', 'discount', 'finalPrice']
-              }
-            ]
-          });
-          console.log("📦 Cart items (backend):", items);
+  static async getCartByUser(req, res) {
+    const { id } = req.params;
+  
+    try {
+      let items = await Cart.findAll({
+        where: { idUser: id },
+        include: [
+          {
+            model: Product,
+            as: 'product',
+            required: true,
+            attributes: ['id', 'name', 'image', 'price', 'discount', 'quantity'] // ✅ thêm 'quantity'
+          }
+        ]
+        
+      });
+      
+  
+      items = items.map(item => {
+        const product = item.product?.toJSON?.() || {}; // ✅ không lỗi khi undefined
+      
+        const finalPrice = product.discount > 0
+          ? product.price - product.discount
+          : product.price;
+      
+        return {
+          ...item.toJSON(),
+          product: {
+            ...product,
+            finalPrice
+          }
+        };
+      });
+      
+  
+      res.json({ message: "Lấy giỏ hàng thành công", data: items });
+    } catch (err) {
+      console.error("❌ Lỗi lấy giỏ hàng:", err);
+      res.status(500).json({ message: "Lỗi", error: err.message });
+    }
+  }
+  // Xoá 1 sản phẩm trong giỏ
+static async deleteOne(req, res) {
+  const { id } = req.params;
+  try {
+    await Cart.destroy({ where: { id } });
+    res.json({ message: 'Đã xoá sản phẩm khỏi giỏ hàng' });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi xoá sản phẩm', error: err.message });
+  }
+}
 
-          res.json({ message: "Lấy giỏ hàng thành công", data: items });
-        } catch (err) {
-          console.error("❌ Lỗi lấy giỏ hàng:", err);
-          res.status(500).json({ message: "Lỗi", error: err.message });
-        }
-      }
+// Xoá nhiều sản phẩm
+static async deleteMultiple(req, res) {
+  const { ids } = req.body; // [1, 2, 3]
+  try {
+    await Cart.destroy({ where: { id: { [Op.in]: ids } } });
+    res.json({ message: 'Đã xoá nhiều sản phẩm khỏi giỏ hàng' });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi xoá nhiều sản phẩm', error: err.message });
+  }
+}
+
       
 }
 

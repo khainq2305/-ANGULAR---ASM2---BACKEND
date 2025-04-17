@@ -60,7 +60,8 @@ class AuthController {
             res.status(200).json({
                 message: "Đăng nhập thành công!",
                 token,
-                email: user.email // ✅ Trả về email để frontend dùng
+                email: user.email,
+                role: user.role // 👈 thêm dòng này
               });
               
         } catch (error) {

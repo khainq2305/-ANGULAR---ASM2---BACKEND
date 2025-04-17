@@ -31,10 +31,8 @@ const Product = sequelize.define(
     is_feature: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-    },finalPrice: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: true,
-    },
+    }
+    ,
     image: {
       type: DataTypes.STRING,
       allowNull: true,

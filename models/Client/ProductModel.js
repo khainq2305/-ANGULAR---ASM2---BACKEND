@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../database');
-
+const Category = require('./categoryModel'); // ✅ đúng đường dẫn đến category model
 const Product = sequelize.define('Product', {
   name: {
     type: DataTypes.STRING,
@@ -29,12 +29,15 @@ const Product = sequelize.define('Product', {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0
   },
-  finalPrice: DataTypes.DECIMAL(10, 2),
+
   deletedAt: DataTypes.DATE
 }, {
   tableName: 'products',
   timestamps: true,
   paranoid: true // enable soft delete
 });
+
+
+Product.belongsTo(Category, { foreignKey: 'idCategory', as: 'category' });
 
 module.exports = Product;

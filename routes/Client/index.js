@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const authRoutes = require('./authRoutes');
-const ProductController = require('../../controllers/Client/ProductController');
+const productRoutes = require('./productRoutes');
 const cartRoutes = require('./cartRoutes'); // ✅ THÊM
 const orderRoutes = require('./orderRoutes'); // ✅ THÊM DÒNG NÀY
-const productRoutes = require('./productRoutes');
+const commentRoutes = require('./commentRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const ghnRoutes = require('./ghn');
 // Route đăng nhập, đăng ký
@@ -25,6 +25,7 @@ router.use('/orders', orderRoutes); // 👈 GẮN VÀO
 
 router.use('/categories', categoryRoutes);
 
+router.use('/comments', commentRoutes); // ✅ THÊM DÒNG NÀY
 
 
 

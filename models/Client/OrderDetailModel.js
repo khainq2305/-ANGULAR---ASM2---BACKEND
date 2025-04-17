@@ -22,5 +22,12 @@ const OrderDetail = sequelize.define('OrderDetail', {
   tableName: 'order_details',
   timestamps: true
 });
+const Product = require('./productModel');
+
+// ⬇️ THÊM DƯỚI DÒNG `module.exports = OrderDetail;`
+OrderDetail.belongsTo(Product, {
+  foreignKey: 'idProduct',
+  as: 'product'
+});
 
 module.exports = OrderDetail;

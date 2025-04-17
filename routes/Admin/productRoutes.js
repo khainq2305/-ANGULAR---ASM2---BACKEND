@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const ProductController = require('../../controllers/admin/productController');
+const ProductController = require('../../controllers/Admin/productController');
 const upload = require('../../middlewares/uploads'); 
 
 router.get('/products/list', ProductController.get);
@@ -21,8 +21,8 @@ router.post(
 router.put(
   '/products/:id',
   upload.fields([
-    { name: 'thumbnail', maxCount: 1 }, // tên này phải đúng với tên append ở frontend
-    { name: 'media', maxCount: 10 }     // nếu có phần media (ảnh chi tiết)
+    { name: 'image', maxCount: 1 }, 
+ 
   ]),
   ProductController.update
 );

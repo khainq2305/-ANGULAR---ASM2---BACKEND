@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const app = express();
-const port = 3000;
+const port = 3001;
 
 // Đổi thành thư mục admin chuẩn
 const adminRoutes = require('./routes/Admin');

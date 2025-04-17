@@ -101,26 +101,51 @@ class OrderController {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-
-      const order = await Order.findOne({ where: { id } });
-      if (!order) return res.status(404).json({ status: 404, message: "Đơn hàng không tồn tại" });
-
+  
+      const order = await Order.findOne({
+        where: { id },
+        include: [
+          {
+            model: OrderDetail,
+            as: "orderDetails"
+          }
+        ]
+      });
+  
+      if (!order) {
+        return res.status(404).json({ status: 404, message: "Đơn hàng không tồn tại" });
+      }
+  
       if ([2, 3].includes(order.status) || order.payment_status === "paid") {
         return res.status(400).json({ status: 400, message: "Không thể hủy đơn hàng đã thanh toán hoặc đang giao" });
       }
-
+  
       if (order.status === 4) {
         return res.status(400).json({ status: 400, message: "Không thể hủy đơn hàng đã bị hủy" });
       }
-
-      await Order.update({ status: 4, cancel_reason: reason }, { where: { id } });
-
-      res.status(200).json({ status: 200, message: "Đơn hàng đã bị hủy" });
+  
+      // ✅ Cộng lại số lượng sản phẩm
+      for (const item of order.orderDetails) {
+        const product = await Product.findByPk(item.idProduct);
+        if (product) {
+          product.quantity += item.quantity;
+          await product.save();
+        }
+      }
+  
+      // ✅ Cập nhật trạng thái và lý do huỷ
+      await Order.update(
+        { status: 4, cancel_reason: reason },
+        { where: { id } }
+      );
+  
+      return res.status(200).json({ status: 200, message: "Đơn hàng đã bị hủy và số lượng sản phẩm đã được khôi phục" });
     } catch (error) {
       console.error("Lỗi khi hủy đơn hàng:", error);
-      res.status(500).json({ status: 500, message: "Lỗi khi hủy đơn hàng", error: error.message });
+      return res.status(500).json({ status: 500, message: "Lỗi khi hủy đơn hàng", error: error.message });
     }
   }
+  
 
   // Lấy form chỉnh sửa đơn hàng
   static async getEditForm(req, res) {
