@@ -128,7 +128,7 @@ router.post('/fee', async (req, res) => {
     return res.status(500).json({
       error: 'GHN Fee Error',
       detail: error.response?.data || error.message,
-      payload: req.body, // Gửi luôn payload về FE để debug
+      payload: req.body, 
     });
   }
   

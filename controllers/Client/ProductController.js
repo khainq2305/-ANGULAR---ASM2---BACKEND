@@ -1,6 +1,6 @@
-const { Op } = require('sequelize'); // ✅ Thêm dòng này
-const Product = require('../../models/Client/ProductModel');
-const Category = require('../../models/Client/categoryModel'); // 👈 Đường dẫn đúng model của m
+const { Op } = require('sequelize'); 
+const Product = require('../../models/Client/productModel');
+const Category = require('../../models/Client/categoryModel'); 
 
 class ClientProductController {
   static async getById(req, res) {

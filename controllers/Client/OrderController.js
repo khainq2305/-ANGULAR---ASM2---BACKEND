@@ -87,11 +87,17 @@ console.log('🧹 Xoá giỏ hàng với product_id IN:', cartItems.map(item => 
   }
   static async getOrdersByUser(req, res) {
     try {
-      console.log('👉 req.user =', req.user); // 👈 thêm log này
       const idUser = req.user.id;
+      const { status } = req.query; 
+  
+      const whereClause = { idUser };
+  
+      if (status !== undefined) {
+        whereClause.status = parseInt(status); 
+      }
   
       const orders = await Order.findAll({
-        where: { idUser },
+        where: whereClause,
         include: [
           {
             model: OrderDetail,
