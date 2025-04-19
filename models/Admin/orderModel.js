@@ -44,6 +44,12 @@ const Order = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    order_code: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    }
+    
   },
   {
     tableName: "orders",

@@ -4,6 +4,9 @@ const OrderDetail = require('../../models/Client/OrderDetailModel');
 const Product = require('../../models/Admin/productModel');
 const Cart = require('../../models/Client/CartModel');
 const { Op } = require('sequelize');
+const axios = require('axios');
+require('dotenv').config();
+const GHN_TOKEN = process.env.GHN_TOKEN;
 
 const CheckoutAddress = require('../../models/Client/checkoutAddressModel');
 class OrderController {
@@ -22,17 +25,27 @@ class OrderController {
       } = req.body;
 
       // 1. Tạo đơn hàng mới
-      const newOrder = await Order.create({
-        idUser,
-        checkout_address_id,
-        name,
-        phone,
-        payment_method,
-        shipping_method,
-        total_price,
-        status: 0, // Chờ xác nhận
-        payment_status: 'pending'
-      });
+    // Tạo đơn
+const newOrder = await Order.create({
+  idUser,
+  checkout_address_id,
+  name,
+  phone,
+  payment_method,
+  shipping_method,
+  total_price,
+  status: 0,
+  payment_status: 'pending'
+});
+
+// 👇 Tạo mã đơn hàng từ ID và ngày hiện tại
+const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+const paddedId = String(newOrder.id).padStart(4, '0');
+const orderCode = `ORD${today}-${paddedId}`;
+
+// 👇 Cập nhật lại
+await newOrder.update({ order_code: orderCode });
+
 
       // 2. Lấy danh sách sản phẩm trong giỏ hàng
       const cartItems = await Cart.findAll({
@@ -126,16 +139,43 @@ console.log('🧹 Xoá giỏ hàng với product_id IN:', cartItems.map(item => 
     
   
     try {
-      const addressData = await CheckoutAddress.create({
-        idUser: userId,
-        province_name: address.provinceId,
-        district_name: address.districtId,
-        ward_name: address.wardCode,
-        address_detail: address.address_detail, // ✅ thêm dòng này
-        phone: address.phone                    // ✅ thêm dòng này
+      const province = await axios.get(`https://online-gateway.ghn.vn/shiip/public-api/master-data/province`, {
+        headers: { Token: GHN_TOKEN }
       });
       
-  
+      const district = await axios.get(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district`, {
+        params: { province_id: address.provinceId },
+        headers: { Token: GHN_TOKEN }
+      });
+      
+      const ward = await axios.post(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward`, 
+        { district_id: parseInt(address.districtId) }
+,
+        {
+          headers: {
+            Token: GHN_TOKEN,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      const provinceId = +address.provinceId;
+const districtId = +address.districtId;
+
+const provinceName = province.data.data.find(p => p.ProvinceID === provinceId)?.ProvinceName || 'Không rõ';
+const districtName = district.data.data.find(d => d.DistrictID === districtId)?.DistrictName || 'Không rõ';
+
+      const wardName = ward.data.data.find((w) => w.WardCode === address.wardCode)?.WardName || 'Không rõ';
+      
+      const addressData = await CheckoutAddress.create({
+        idUser: userId,
+        province_name: provinceName,
+        district_name: districtName,
+        ward_name: wardName,
+        address_detail: address.address_detail,
+        phone: address.phone
+      });
+      
       const order = await Order.create({
         idUser: userId,
         checkout_address_id: addressData.id,
@@ -147,7 +187,11 @@ console.log('🧹 Xoá giỏ hàng với product_id IN:', cartItems.map(item => 
         shipping_method: shippingMethod,
         status: 0
       });
-      
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+const paddedId = String(order.id).padStart(4, '0');
+const orderCode = `ORD${today}-${paddedId}`;
+await order.update({ order_code: orderCode });
+
   
       for (let item of cartItems) {
         await OrderDetail.create({
@@ -178,7 +222,7 @@ console.log('🧹 Xoá giỏ hàng với product_id IN:', cartItems.map(item => 
         }
       });
       
-      return res.status(201).json({ message: 'Đặt hàng thành công', orderId: order.idOrder });
+      return res.status(201).json({ message: 'Đặt hàng thành công', orderId: order.id });
     } catch (error) {
       console.error('❌ Lỗi tạo đơn hàng:', error);
       return res.status(500).json({ error: 'Lỗi server khi tạo đơn hàng' });

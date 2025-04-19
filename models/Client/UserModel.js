@@ -17,6 +17,10 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    status: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1 // ✅ 1 = hoạt động, 0 = khóa
+      },
     role: {
         type: DataTypes.ENUM(0, 1),  // 0 = User, 1 = Admin
         allowNull: false,

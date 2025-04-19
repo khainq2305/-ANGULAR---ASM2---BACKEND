@@ -26,6 +26,12 @@ const Order = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    order_code: {
+      type: DataTypes.STRING,
+      allowNull: true, // ✅ CHỈ sửa dòng này
+      unique: true
+    }    
+,    
     status: {
       type: DataTypes.INTEGER,
       allowNull: false,

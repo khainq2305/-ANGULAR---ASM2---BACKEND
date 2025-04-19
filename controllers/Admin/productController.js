@@ -97,20 +97,7 @@ class ProductController {
       res.status(500).json({ message: "Lỗi server", error: err.message });
     }
   }
-  static async getActiveCategories(req, res) {
-    try {
-      const categories = await Category.findAll({
-        where: { status: 1 },
-        attributes: ['id', 'name'],
-      });
-  
-      res.json({ success: true, data: categories });
-    } catch (error) {
-      console.error('❌ Lỗi khi lấy danh mục hoạt động:', error);
-      res.status(500).json({ success: false, message: 'Lỗi server' });
-    }
-  }
-  
+
   // ✅ Lấy 1 sản phẩm theo ID
   static async getById(req, res) {
     try {

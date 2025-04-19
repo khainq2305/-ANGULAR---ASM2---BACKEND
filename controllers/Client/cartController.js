@@ -1,6 +1,6 @@
 const Cart = require("../../models/Client/CartModel");
 const User = require('../../models/Client/UserModel'); // ✅ thêm dòng này để fix lỗi
-const Product = require('../../models/Client/ProductModel'); // ✅ import model Product
+const Product = require('../../models/Client/productModel'); // ✅ import model Product
 
 class CartController {
   static async addToCart(req, res) {

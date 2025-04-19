@@ -31,16 +31,20 @@ class AuthController {
   static async login(req, res) {
     try {
       const { email, password } = req.body;
-      console.log("📩 Dữ liệu đăng nhập:", req.body);
-
-      const user = await User.findOne({ where: { email } });
-      console.log("🔍 User tìm thấy:", user);
-
+      const user = await User.findOne({ where: { email },   attributes: ['id', 'email', 'password', 'role', 'status']  });
+  
       if (!user) {
         return res
           .status(400)
           .json({ message: "Email hoặc mật khẩu không chính xác!" });
       }
+  
+      // 👉 Kiểm tra tài khoản có bị khóa không
+      if (Number(user.status) === 0 || user.status == '0') {
+        return res.status(403).json({ message: "Tài khoản của bạn đã bị khóa!" });
+      }
+      
+      console.log("🧾 Trạng thái người dùng:", user.status);
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
@@ -48,13 +52,13 @@ class AuthController {
           .status(400)
           .json({ message: "Email hoặc mật khẩu không chính xác!" });
       }
-
+  
       const token = jwt.sign(
         { id: user.id, name: user.name, email: user.email, role: user.role },
         JWT_SECRET,
         { expiresIn: "1h" }
       );
-
+  
       res.status(200).json({
         message: "Đăng nhập thành công!",
         token,
@@ -65,6 +69,7 @@ class AuthController {
       res.status(500).json({ message: "Lỗi server", error: error.message });
     }
   }
+  
 }
 
 module.exports = AuthController;

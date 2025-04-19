@@ -3,7 +3,7 @@ const Comment = require('../../models/Admin/commentModel');
 const Product = require('../../models/Admin/productModel'); 
 const User = require('../../models/Admin/userModel'); 
 require('dotenv').config(); 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'; 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3001'; 
 
 Comment.belongsTo(Product, { foreignKey: 'product_id' });
 Comment.belongsTo(User, { foreignKey: 'idUser' }); 

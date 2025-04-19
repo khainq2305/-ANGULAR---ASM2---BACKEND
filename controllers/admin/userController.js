@@ -146,29 +146,39 @@ module.exports = {
     }
   },
 
-async toggleStatus(req, res) {
+  
+  async toggleStatus(req, res) {
     try {
       const { id } = req.params;
-      const { status } = req.body; 
+      const currentUserId = req.user?.id; // lấy ID người đang đăng nhập
   
+      if (+id === +currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "Bạn không thể tự khóa tài khoản của chính mình."
+        });
+      }
+  
+      let { status, reason } = req.body;
       const user = await User.findByPk(id);
+  
       if (!user) {
         return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
       }
   
-      if (status !== undefined) {
-        user.status = parseInt(status);
-      } else {
-        user.status = user.status === 1 ? 0 : 1;
-      }
-  
+      user.status = parseInt(status);
+      user.reason = reason || null;
       await user.save();
+  
       res.json({ success: true, message: 'Cập nhật trạng thái thành công', data: user });
+  
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ success: false, message: 'Lỗi server' });
+      console.error('❌ Lỗi toggleStatus:', err);
+      res.status(500).json({ success: false, message: 'Lỗi server', error: err.message });
     }
-  },
+  }
+  
+,  
   
 
   async resetPassword(req, res) {

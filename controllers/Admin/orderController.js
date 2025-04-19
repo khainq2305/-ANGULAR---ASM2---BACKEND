@@ -12,7 +12,12 @@ class OrderController {
       const where = {};
 
       if (status) where.status = status;
-      if (search) where.id = { [Op.like]: `%${search}%` };
+      if (search) {
+        where[Op.or] = [
+          { id: { [Op.like]: `%${search}%` } },
+          { order_code: { [Op.like]: `%${search}%` } } // tìm theo mã đơn hàng
+        ];
+      }
       if (payment_status) where.payment_status = payment_status;
 
       if (fromDate && toDate) {
@@ -37,7 +42,7 @@ class OrderController {
             attributes: ["province_name", "district_name", "ward_name", "address_detail"]
           }
         ],
-        attributes: ["id", "createdAt", "total_price", "status", "payment_status", "phone", "payment_method"],
+        attributes: ["id", "order_code", "createdAt", "total_price", "status", "payment_status", "phone", "payment_method"],
         limit,
         offset,
         order: [["createdAt", (sort || "desc").toUpperCase()]]
@@ -75,7 +80,7 @@ class OrderController {
               {
                 model: Product,
                 as: "product",
-                attributes: ["name", "price", "image"]
+                attributes: ["name", "price", "image", "discount"]
               }
             ]
           },
@@ -83,6 +88,11 @@ class OrderController {
             model: User,
             as: "customer",
             attributes: ["id", "name", "email", "phone"]
+          },
+          {
+            model: CheckoutAddress,
+            as: "shippingAddress",
+            attributes: ["province_name", "district_name", "ward_name", "address_detail"]
           }
         ]
       });
@@ -101,7 +111,14 @@ class OrderController {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-  
+
+      if (!reason || reason.trim() === "") {
+        return res.status(400).json({
+          status: 400,
+          message: "Vui lòng nhập lý do hủy đơn hàng."
+        });
+      }
+
       const order = await Order.findOne({
         where: { id },
         include: [
@@ -111,20 +128,19 @@ class OrderController {
           }
         ]
       });
-  
+
       if (!order) {
         return res.status(404).json({ status: 404, message: "Đơn hàng không tồn tại" });
       }
-  
+
       if ([2, 3].includes(order.status) || order.payment_status === "paid") {
         return res.status(400).json({ status: 400, message: "Không thể hủy đơn hàng đã thanh toán hoặc đang giao" });
       }
-  
+
       if (order.status === 4) {
-        return res.status(400).json({ status: 400, message: "Không thể hủy đơn hàng đã bị hủy" });
+        return res.status(400).json({ status: 400, message: "Đơn hàng đã bị hủy trước đó" });
       }
-  
-      // ✅ Cộng lại số lượng sản phẩm
+
       for (const item of order.orderDetails) {
         const product = await Product.findByPk(item.idProduct);
         if (product) {
@@ -132,20 +148,18 @@ class OrderController {
           await product.save();
         }
       }
-  
-      // ✅ Cập nhật trạng thái và lý do huỷ
+
       await Order.update(
         { status: 4, cancel_reason: reason },
         { where: { id } }
       );
-  
-      return res.status(200).json({ status: 200, message: "Đơn hàng đã bị hủy và số lượng sản phẩm đã được khôi phục" });
+
+      return res.status(200).json({ status: 200, message: "Hủy đơn thành công" });
     } catch (error) {
-      console.error("Lỗi khi hủy đơn hàng:", error);
-      return res.status(500).json({ status: 500, message: "Lỗi khi hủy đơn hàng", error: error.message });
+      console.error("❌ Lỗi khi hủy đơn hàng:", error);
+      return res.status(500).json({ status: 500, message: "Lỗi server", error: error.message });
     }
   }
-  
 
   // Lấy form chỉnh sửa đơn hàng
   static async getEditForm(req, res) {
