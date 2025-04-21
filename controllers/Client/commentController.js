@@ -31,6 +31,7 @@ class CommentController {
   // GET /comments/product/:id
   static async getByProduct(req, res) {
     try {
+      console.log("đã gọi getByProduct" ); // Debug log
       const { id } = req.params;
 
       const comments = await Comment.findAll({
@@ -43,6 +44,35 @@ class CommentController {
       res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
     }
   }
+
+  static async getCommentUser(req, res) { 
+    console.log("đã gọi getCommentUser" ); // Debug log
+    const { userId, productId } = req.query;
+
+    if (!userId || !productId) {
+        return res.status(400).json({ message: "Thiếu userId hoặc productId" });
+    }
+
+    try {
+        // Thay 'userId' thành 'idUser' vì tên cột trong CSDL là 'idUser'
+        const comment = await Comment.findOne({
+            where: {
+                idUser: userId,  // Chỉnh sửa ở đây
+                product_id: productId
+            }
+        });
+
+        if (comment) {
+            return res.status(200).json({ exists: true, comment });
+        } else {
+            return res.status(200).json({ exists: false });
+        }
+    } catch (error) {
+        console.error("Lỗi getCommentUser:", error);
+        return res.status(500).json({ message: "Lỗi server" });
+    }
+}
+
 }
 
 module.exports = CommentController;

@@ -1,3 +1,4 @@
+require('dotenv').config()
 const User = require('../../models/Client/UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -38,7 +39,7 @@ class AuthController {
             console.log("📩 Dữ liệu đăng nhập:", req.body); // 👈 THÊM DÒNG NÀY
             // Kiểm tra xem email có tồn tại không
             const user = await User.findOne({ where: { email } });
-            console.log("🔍 User tìm thấy:", user);
+            
             
             if (!user) {
                 return res.status(400).json({ message: "Email hoặc mật khẩu không chính xác!" });

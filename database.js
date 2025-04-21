@@ -6,21 +6,23 @@ console.log("ENV TEST:", {
   DB_HOST: process.env.DB_HOST,
   DB_DIALECT: process.env.DB_DIALECT
 });
+
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
-  process.env.DB_PASSWORD, 
+  process.env.DB_PASS, 
   {
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
-    logging: false,
+    logging: false, // Tắt log chi tiết truy vấn SQL
   }
 );
 
 sequelize.authenticate()
-  .then(() => console.log('Kết nối MySQL thành công!'))
-  .catch(err => console.error('Lỗi kết nối:', err));
+  .then(() => console.log('✅ Kết nối MySQL thành công!'))
+  .catch(err => console.error('❌ Lỗi kết nối:', err));
+
 
 module.exports = sequelize;

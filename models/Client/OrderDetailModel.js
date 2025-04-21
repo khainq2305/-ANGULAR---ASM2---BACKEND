@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../database');
+const Product = require('./ProductModel');
 
 const OrderDetail = sequelize.define('OrderDetail', {
   idOrder: {
@@ -22,12 +23,13 @@ const OrderDetail = sequelize.define('OrderDetail', {
   tableName: 'order_details',
   timestamps: true
 });
-const Product = require('./productModel');
 
-// ⬇️ THÊM DƯỚI DÒNG `module.exports = OrderDetail;`
+// Quan hệ với Product
 OrderDetail.belongsTo(Product, {
   foreignKey: 'idProduct',
-  as: 'product'
+  as: 'product',
 });
+
+// Remove the belongsTo relationship with Order here
 
 module.exports = OrderDetail;

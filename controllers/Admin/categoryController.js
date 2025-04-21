@@ -88,35 +88,88 @@ class CategoryController {
       
       
       
-    static async getAllSoftDelete(req, res) {
+      static async getAllSoftDelete(req, res) {
         try {
-            const categories = await CategoryModel.findAll({
-                where: {
-                    deletedAt: {
-                        [Op.ne]: null
-                    }
-                },
-                paranoid: false
-            });
-
-            if (!categories || categories.length === 0) {
-                return res.status(404).json({ message: "Không tìm thấy danh mục nào" });
+            const {
+              page = 1,
+              limit = 10,
+              search,
+              sort,
+              deleteDate,
+            } = req.query;
+        
+            const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+            const where = {
+              deletedAt: { [Op.ne]: null },
+            };
+        
+            if (search) {
+              where.name = { [Op.like]: `%${search}%` };
             }
-
+        
+            if (deleteDate) {
+              const startDate = new Date(deleteDate);
+              const endDate = new Date(startDate);
+              endDate.setHours(23, 59, 59, 999);
+              where.deletedAt = {
+                [Op.between]: [startDate, endDate],
+              };
+            }
+        
+            let order;
+            switch (sort) {
+              case 'nameAsc':
+                order = [['name', 'ASC']];
+                break;
+              case 'nameDesc':
+                order = [['name', 'DESC']];
+                break;
+              case 'dateAsc':
+                order = [['deletedAt', 'ASC']];
+                break;
+              case 'dateDesc':
+              default:
+                order = [['deletedAt', 'DESC']];
+            }
+        
+            const { count, rows } = await CategoryModel.findAndCountAll({
+              where,
+              attributes: ['id', 'name', 'description', 'imageUrl', 'status', 'createdAt', 'updatedAt', 'deletedAt'],
+              paranoid: false,
+              offset,
+              limit: parseInt(limit),
+              order,
+            });
+        
+            if (!rows.length) {
+              return res.status(200).json({
+                status: 200,
+                message: 'Không tìm thấy danh mục nào',
+                data: [],
+                totalItems: 0,
+                totalPages: 0,
+                currentPage: parseInt(page),
+              });
+            }
+        
             res.status(200).json({
-                "status": 200,
-                "message": "Lấy danh sách thành công",
-                "data": categories
+              status: 200,
+              message: 'Lấy danh sách thành công',
+              data: rows,
+              totalItems: count,
+              totalPages: Math.ceil(count / limit),
+              currentPage: parseInt(page),
             });
-        } catch (error) {
+          } catch (error) {
+            console.error('Error fetching soft deleted categories:', error);
             res.status(500).json({
-                error: {
-                    message: error.message,
-                    stack: error.stack 
-                }
+              status: 500,
+              message: 'Lỗi server',
+              error: error.message,
             });
-        }
-    }
+          }
+      }
 
     static async getById(req, res) {
         try {

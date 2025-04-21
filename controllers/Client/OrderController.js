@@ -92,6 +92,23 @@ console.log('🧹 Xoá giỏ hàng với product_id IN:', cartItems.map(item => 
   
       const orders = await Order.findAll({
         where: { idUser },
+        attributes: [
+          'id',
+          'order_code',
+          'idUser',
+          'checkout_address_id',
+          'name',
+          'createdAt',
+          'status',
+          'total_price',
+          'payment_method',
+          'payment_status',
+          'shipping_method',
+          'cancel_reason',
+          'phone',
+          'updatedAt',
+          'orderDate'
+        ],
         include: [
           {
             model: OrderDetail,
@@ -110,7 +127,6 @@ console.log('🧹 Xoá giỏ hàng với product_id IN:', cartItems.map(item => 
   
       res.json({ success: true, orders });
     } catch (error) {
-      console.error("❌ Lỗi khi lấy danh sách đơn hàng:", error);
       res.status(500).json({ success: false, message: "Lỗi server" });
     }
   }
